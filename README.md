@@ -1,11 +1,17 @@
-# homebrew-macshield
+# homebrew-tools
 
-Homebrew tap for [macshield](https://github.com/qinnovates/macshield), a network-aware macOS security hardening tool.
+Homebrew tap for [Qinnovates](https://github.com/qinnovates) tools.
+
+## Formulas
+
+| Formula | Description |
+|---------|-------------|
+| [macshield](https://github.com/qinnovates/macshield) | Network-aware macOS security hardening |
 
 ## Install
 
 ```bash
-brew tap qinnovates/macshield
+brew tap qinnovates/tools
 brew install macshield
 ```
 
