@@ -12,48 +12,26 @@ class Macshield < Formula
   end
 
   def post_install
-    # Install LaunchAgent
-    launch_agent_dir = Pathname.new("#{Dir.home}/Library/LaunchAgents")
-    launch_agent_dir.mkpath
-    plist_dest = launch_agent_dir / "com.qinnovates.macshield.plist"
+    # Install LaunchDaemon (runs as root, no sudoers needed)
+    daemon_dest = Pathname.new("/Library/LaunchDaemons/com.qinnovates.macshield.plist")
 
     # Update plist to point to Homebrew-installed binary
     plist_content = (libexec / "com.qinnovates.macshield.plist").read
     plist_content.gsub!("/usr/local/bin/macshield", "#{HOMEBREW_PREFIX}/bin/macshield")
-    plist_dest.write(plist_content)
 
-    # Install sudoers fragment
-    sudoers_content = <<~EOS
-      # Installed by macshield (Homebrew) - network-aware security hardening
-      # Grants passwordless access to ONLY these specific commands:
-      Cmnd_Alias MACSHIELD_CMDS = \\
-          /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode on, \\
-          /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode off, \\
-          /usr/sbin/scutil --set ComputerName *, \\
-          /usr/sbin/scutil --set LocalHostName *, \\
-          /usr/sbin/scutil --set HostName *, \\
-          /bin/launchctl bootout system/com.apple.netbiosd, \\
-          /bin/launchctl enable system/com.apple.netbiosd, \\
-          /bin/launchctl kickstart system/com.apple.netbiosd
-
-      %admin ALL=(root) NOPASSWD: MACSHIELD_CMDS
-    EOS
-
-    sudoers_tmp = buildpath / "macshield.sudoers"
-    sudoers_tmp.write(sudoers_content)
-
-    ohai "Installing sudoers fragment (requires sudo)..."
-    system "sudo", "cp", sudoers_tmp.to_s, "/etc/sudoers.d/macshield"
-    system "sudo", "chmod", "440", "/etc/sudoers.d/macshield"
-    system "sudo", "chown", "root:wheel", "/etc/sudoers.d/macshield"
+    ohai "Installing LaunchDaemon (requires sudo)..."
+    system "sudo", "tee", daemon_dest.to_s, :in => StringIO.new(plist_content)
+    system "sudo", "chown", "root:wheel", daemon_dest.to_s
+    system "sudo", "chmod", "644", daemon_dest.to_s
+    system "sudo", "launchctl", "bootstrap", "system", daemon_dest.to_s
   end
 
   def caveats
     <<~EOS
       macshield is installed and ready.
 
-      To start the LaunchAgent (auto-harden on network changes):
-        launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.qinnovates.macshield.plist
+      The LaunchDaemon runs as root (no sudoers fragment needed).
+      It triggers automatically on WiFi network changes.
 
       To trust your current WiFi network:
         macshield trust
@@ -61,9 +39,8 @@ class Macshield < Formula
       To check current status:
         macshield --check
 
-      The sudoers fragment at /etc/sudoers.d/macshield grants passwordless
-      sudo for 8 specific commands only (stealth mode, hostname, NetBIOS).
-      Review it with: cat /etc/sudoers.d/macshield
+      The daemon is a pure bash script. Audit every line:
+        cat $(brew --prefix macshield)/bin/macshield
     EOS
   end
 
