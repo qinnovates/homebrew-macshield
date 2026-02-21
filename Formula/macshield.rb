@@ -2,7 +2,7 @@ class Macshield < Formula
   desc "Network-aware macOS security hardening"
   homepage "https://github.com/qinnovates/macshield"
   url "https://github.com/qinnovates/macshield/archive/refs/tags/v0.3.0.tar.gz"
-  sha256 "823cd2bd5972f6a4e73729b01b374e98e520cd8796b18858260d4fe5120ad2ba"
+  sha256 "60fba2cbb86ddce6bcd4e6b2c5ecac22a173628fbfed17cdbb59996a9884033d"
   license "Apache-2.0"
 
   def install
