@@ -1,8 +1,8 @@
 class Macshield < Formula
   desc "Network-aware macOS security hardening"
   homepage "https://github.com/qinnovates/macshield"
-  url "https://github.com/qinnovates/macshield/archive/refs/tags/v0.2.0.tar.gz"
-  sha256 "f99663b0637ba8c1c6c8d01fd6f10de1ae5490e08ab16ff17190965f1ae3208a"
+  url "https://github.com/qinnovates/macshield/archive/refs/tags/v0.3.0.tar.gz"
+  sha256 "PLACEHOLDER_UPDATE_AFTER_RELEASE"
   license "Apache-2.0"
 
   def install
@@ -12,26 +12,18 @@ class Macshield < Formula
   end
 
   def post_install
-    # Install LaunchDaemon (runs as root, no sudoers needed)
-    daemon_dest = Pathname.new("/Library/LaunchDaemons/com.qinnovates.macshield.plist")
-
-    # Update plist to point to Homebrew-installed binary
-    plist_content = (libexec / "com.qinnovates.macshield.plist").read
-    plist_content.gsub!("/usr/local/bin/macshield", "#{HOMEBREW_PREFIX}/bin/macshield")
-
-    ohai "Installing LaunchDaemon (requires sudo)..."
-    system "sudo", "tee", daemon_dest.to_s, :in => StringIO.new(plist_content)
-    system "sudo", "chown", "root:wheel", daemon_dest.to_s
-    system "sudo", "chmod", "644", daemon_dest.to_s
-    system "sudo", "launchctl", "bootstrap", "system", daemon_dest.to_s
+    # Run the interactive installer (same experience as ./install.sh)
+    ohai "Launching interactive installer..."
+    system "bash", (libexec / "install.sh").to_s
   end
 
   def caveats
     <<~EOS
       macshield is installed and ready.
 
-      The LaunchDaemon runs as root (no sudoers fragment needed).
-      It triggers automatically on WiFi network changes.
+      The LaunchAgent runs as YOUR user (not root).
+      A sudoers fragment grants passwordless sudo for exact commands only.
+      Privileged commands are elevated via sudo, not a root daemon.
 
       To trust your current WiFi network:
         macshield trust
@@ -39,7 +31,10 @@ class Macshield < Formula
       To check current status:
         macshield --check
 
-      The daemon is a pure bash script. Audit every line:
+      To revoke macshield's sudo authorization:
+        sudo rm /etc/sudoers.d/macshield
+
+      The agent is a pure bash script. Audit every line:
         cat $(brew --prefix macshield)/bin/macshield
     EOS
   end
