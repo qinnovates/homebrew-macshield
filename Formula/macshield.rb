@@ -2,7 +2,7 @@ class Macshield < Formula
   desc "Network-aware macOS security hardening"
   homepage "https://github.com/qinnovates/macshield"
   url "https://github.com/qinnovates/macshield/archive/refs/tags/v0.3.0.tar.gz"
-  sha256 "10bfee41ded236ca2665573e5bf427ce048c266208597ce68ff6f6cf530e0339"
+  sha256 "76a8709bcdc1efb9804da87506e7347500b4e0621b6ae220ad321e69c4e5308a"
   license "Apache-2.0"
 
   def install
@@ -12,30 +12,28 @@ class Macshield < Formula
   end
 
   def post_install
-    # Run the interactive installer (same experience as ./install.sh)
-    ohai "Launching interactive installer..."
-    system "bash", (libexec / "install.sh").to_s
+    # Homebrew post_install has no TTY, so open a new Terminal window
+    # with the interactive installer
+    installer_path = libexec / "install.sh"
+    ohai "Opening interactive installer in a new Terminal window..."
+    system "osascript", "-e",
+      "tell application \"Terminal\" to do script \"bash #{installer_path}\""
   end
 
   def caveats
     <<~EOS
-      macshield is installed and ready.
+      macshield is installed with LaunchAgent and sudoers authorization.
 
-      The LaunchAgent runs as YOUR user (not root).
-      A sudoers fragment grants passwordless sudo for exact commands only.
-      Privileged commands are elevated via sudo, not a root daemon.
+      To complete setup (DNS, proxy, network trust, hostname), run:
+        macshield setup
 
-      To trust your current WiFi network:
-        macshield trust
-
-      To check current status:
-        macshield --check
+      Quick start:
+        macshield trust       # Trust your current WiFi network
+        macshield --check     # See current status
+        macshield --help      # All commands
 
       To revoke macshield's sudo authorization:
         sudo rm /etc/sudoers.d/macshield
-
-      The agent is a pure bash script. Audit every line:
-        cat $(brew --prefix macshield)/bin/macshield
     EOS
   end
 
