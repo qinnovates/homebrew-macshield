@@ -2,7 +2,7 @@ class Macshield < Formula
   desc "Network-aware macOS security hardening"
   homepage "https://github.com/qinnovates/macshield"
   url "https://github.com/qinnovates/macshield/archive/refs/tags/v0.3.0.tar.gz"
-  sha256 "76a8709bcdc1efb9804da87506e7347500b4e0621b6ae220ad321e69c4e5308a"
+  sha256 "fe5a3e411b6a0c912f062981fdf71b74c274abc4582d3d0352a9736a68c8f141"
   license "Apache-2.0"
 
   def install
@@ -12,12 +12,8 @@ class Macshield < Formula
   end
 
   def post_install
-    # Homebrew post_install has no TTY, so open a new Terminal window
-    # with the interactive installer
-    installer_path = libexec / "install.sh"
-    ohai "Opening interactive installer in a new Terminal window..."
-    system "osascript", "-e",
-      "tell application \"Terminal\" to do script \"bash #{installer_path}\""
+    ohai "Run the interactive setup to complete installation:"
+    ohai "  macshield setup"
   end
 
   def caveats
