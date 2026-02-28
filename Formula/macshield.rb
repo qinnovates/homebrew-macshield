@@ -1,38 +1,38 @@
 class Macshield < Formula
-  desc "Network-aware macOS security hardening"
+  desc "Read-only macOS security posture analyzer"
   homepage "https://github.com/qinnovates/macshield"
-  url "https://github.com/qinnovates/macshield/archive/refs/tags/v0.4.1.tar.gz"
-  sha256 "f2833ce7ff01d9b9acc96874a597a42da15b092e90794e5cbb15cc9fbc8ee68f"
+  url "https://github.com/qinnovates/macshield.git",
+      branch: "main"
+  version "1.0.0"
   license "Apache-2.0"
 
-  def install
-    bin.install "macshield.sh" => "macshield"
-    libexec.install "install.sh", "uninstall.sh"
-    libexec.install "com.qinnovates.macshield.plist"
-  end
+  depends_on xcode: ["16.0", :build]
+  depends_on macos: :sonoma # macOS 14+
 
-  def post_install
-    # Launch interactive setup in a new Terminal window
-    # (post_install has no TTY, so we open a real terminal)
-    setup_script = libexec / "install.sh"
-    ohai "Opening interactive setup in a new Terminal window..."
-    system "open", "-a", "Terminal", setup_script.to_s
+  def install
+    system "swift", "build",
+           "--disable-sandbox",
+           "-c", "release"
+    bin.install ".build/release/MacShield" => "macshield"
   end
 
   def caveats
     <<~EOS
-      macshield is installed with LaunchAgent and sudoers authorization.
+      macshield is a read-only security analyzer. It does not modify your system.
 
-      To complete setup (DNS, proxy, network trust, hostname), run:
-        macshield setup
+      Usage:
+        macshield audit                 Full security posture check
+        macshield audit --format json   Machine-readable JSON output
+        macshield scan                  Scan open ports
+        macshield connections           Show active TCP connections
+        macshield persistence           List non-Apple persistence items
+        macshield permissions           Show TCC permissions
 
-      Quick start:
-        macshield trust       # Trust your current WiFi network
-        macshield --check     # See current status
-        macshield --help      # All commands
+      For Full Disk Access (required for TCC queries):
+        System Settings > Privacy & Security > Full Disk Access > add Terminal
 
-      To revoke macshield's sudo authorization:
-        sudo rm /etc/sudoers.d/macshield
+      WARNING: macshield reports what it finds. A passing score does not mean
+      your Mac is secure. See the McNamara Fallacy warning in the README.
     EOS
   end
 
